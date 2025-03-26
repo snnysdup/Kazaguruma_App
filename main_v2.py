@@ -20,6 +20,8 @@ except ImportError:
     st.warning("⚠️ `plotly` がインストールされていません。以下のコマンドでインストールしてください。\n\n```sh\npip install plotly\n```")
 
 # 生成AI活用
+
+# 文章の種類：要検討
 content_kind_of =[
     "中立的で客観的な文章",
     "分かりやすい、簡潔な文章",
@@ -42,10 +44,10 @@ content_kind_of =[
     "人物紹介やインタビューを取り入れた、読み物的な文章",
 ]
 
-# chatGPTにリクエストするためのメソッドを設定。引数には書いてほしい内容と文章のテイストと最大文字数を指定
+# chatGPTにリクエストするためのメソッドを設定。引数には書いてほしい内容と文章のテイストと最大文字数を指定（書いてほしい内容、文章の種類、最大文字数を指定）
 def run_gpt(content_text_to_gpt,content_kind_of_to_gpt,content_maxStr_to_gpt):
     # リクエスト内容を決める
-    request_to_gpt = content_text_to_gpt + " また、これを記事として読めるように、記事のタイトル、目次、内容の順番で出力してください。内容は"+ content_maxStr_to_gpt + "文字以内で出力してください。" + "また、文章は" + content_kind_of_to_gpt + "にしてください。"
+    request_to_gpt = content_text_to_gpt + "について学びたい。" + "おすすめの本をランキング形式で3つ出力してください。おすすめの際に、理由を添えてください。内容は"+ content_maxStr_to_gpt + "文字以内で出力してください。" + "また、文章は" + content_kind_of_to_gpt + "にしてください。"
     
     # 決めた内容を元にclient.chat.completions.createでchatGPTにリクエスト。オプションとしてmodelにAIモデル、messagesに内容を指定
     response = client.chat.completions.create(
@@ -64,7 +66,7 @@ def run_gpt(content_text_to_gpt,content_kind_of_to_gpt,content_maxStr_to_gpt):
 st.title('📚 学びたい内容に合った本をおすすめ！')
 
 # 書かせたい内容
-content_text_to_gpt = st.sidebar.text_input("書かせたい内容を入力してください！")
+content_text_to_gpt = st.sidebar.text_input("🔍 学びたい内容を入力してください（例: Python, 心理学）")
             
 # 書かせたい内容のテイストを選択肢として表示する
 content_kind_of_to_gpt = st.sidebar.selectbox("文章の種類",options=content_kind_of)
@@ -92,7 +94,7 @@ def search_books(query, category, api_key):
 
 # メイン関数
 def main():
-    st.title("Google Books 検索アプリ")
+    st.title("Google Books 検索")
     # APIkey確認用
     st.text_input("現在設定されているGoogle Books APIキー", value=books_api_key, type="password")
         
