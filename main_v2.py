@@ -47,7 +47,7 @@ content_kind_of =[
 # chatGPTにリクエストするためのメソッドを設定。引数には書いてほしい内容と文章のテイストと最大文字数を指定（書いてほしい内容、文章の種類、最大文字数を指定）
 def run_gpt(content_text_to_gpt,content_kind_of_to_gpt,content_maxStr_to_gpt):
     # リクエスト内容を決める
-    request_to_gpt = content_text_to_gpt + "について学びたい。" + "おすすめの本をランキング形式で3つ出力してください。おすすめの際に、理由を添えてください。また、当該の本へのGooglebookへのリンクを記載してください。内容は"+ content_maxStr_to_gpt + "文字以内で出力してください。" + "また、文章は" + content_kind_of_to_gpt + "にしてください。"
+    request_to_gpt = content_text_to_gpt + "について学びたい。" + "おすすめの本をランキング形式で3つ出力してください。おすすめの際に、理由を添えてください。また、おすすめにあたり参照した出典元のリンクを記載してください。内容は"+ content_maxStr_to_gpt + "文字以内で出力してください。" + "また、文章は" + content_kind_of_to_gpt + "にしてください。"
     
     # 決めた内容を元にclient.chat.completions.createでchatGPTにリクエスト。オプションとしてmodelにAIモデル、messagesに内容を指定
     response = client.chat.completions.create(
