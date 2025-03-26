@@ -45,9 +45,9 @@ content_kind_of =[
 ]
 
 # chatGPTにリクエストするためのメソッドを設定。引数には書いてほしい内容と文章のテイストと最大文字数を指定（書いてほしい内容、文章の種類、最大文字数を指定）
-def run_gpt(content_text_to_gpt,content_kind_of_to_gpt,content_maxStr_to_gpt):
+def run_gpt(content_text_to_gpt,content_current_to_gpt,content_goal_to_gpt,content_kind_of_to_gpt,content_maxStr_to_gpt):
     # リクエスト内容を決める
-    request_to_gpt = content_text_to_gpt + "について学びたい。" + "おすすめの本をランキング形式で3つ出力してください。おすすめの際に、理由を添えてください。また、おすすめにあたり参照した出典元のリンクを記載してください。内容は"+ content_maxStr_to_gpt + "文字以内で出力してください。" + "また、文章は" + content_kind_of_to_gpt + "にしてください。"
+    request_to_gpt = content_text_to_gpt +"について学びたい。"+content_text_to_gpt +"に対する現在の理解度は"+content_current_to_gpt +"レベルです。"+content_text_to_gpt +"に対して"+content_goal_to_gpt+ "程度理解を深めたいと考えています。"+"今後の学習において、おすすめの本をランキング形式で3つ出力してください。おすすめの際に、理由を添えてください。また、おすすめにあたり参照した出典元のリンクを記載してください。内容は"+ content_maxStr_to_gpt + "文字以内で出力してください。" + "また、文章は" + content_kind_of_to_gpt + "にしてください。"
     
     # 決めた内容を元にclient.chat.completions.createでchatGPTにリクエスト。オプションとしてmodelにAIモデル、messagesに内容を指定
     response = client.chat.completions.create(
@@ -65,16 +65,23 @@ def run_gpt(content_text_to_gpt,content_kind_of_to_gpt,content_maxStr_to_gpt):
 # タイトル
 st.title('📚 学びたい内容に合った本をおすすめ！')
 
-# 書かせたい内容
+# 以下、スライダー部分
+# 学びたい内容
 content_text_to_gpt = st.sidebar.text_input("🔍 学びたい内容を入力してください（例: Python, 心理学）")
             
+# 学びに対しての理解度
+content_current_to_gpt = st.sidebar.text_input("上記入力した学びに対してのあなたの理解度を教えてください（例：初学者、業務で使用している）")
+
+# 学びに対して、どの程度理解を深めたいか
+content_goal_to_gpt = st.sidebar.text_input("上記入力した学びに対してのあなたがどの程度理解を深めたいか教えてください（例：業務で使えるレベルになりたい）")
+
 # 書かせたい内容のテイストを選択肢として表示する
 content_kind_of_to_gpt = st.sidebar.selectbox("文章の種類",options=content_kind_of)
 
 # chatGPTに出力させる文字数
 content_maxStr_to_gpt = str(st.sidebar.slider('記事の最大文字数', 100,3000,1000))
 
-output_content_text = run_gpt(content_text_to_gpt,content_kind_of_to_gpt,content_maxStr_to_gpt)
+output_content_text = run_gpt(content_text_to_gpt,content_current_to_gpt,content_goal_to_gpt,content_kind_of_to_gpt,content_maxStr_to_gpt)
 st.write(output_content_text)
 
 
@@ -247,14 +254,8 @@ df = pd.DataFrame(
 )
 
 
-
+# 以下、メモ用
 # メモ：img = Image.open('pic/img031.jpg') # 画像の読み込み
 # メモ：st.image(img, caption='sample', use_column_width=True) # 画像の表示
-
-st.write('Interactive Widgets') # ウィジェットの表示
-
-text = st.sidebar.text_input('学びたい内容を入力してください') # テキスト入力
-'あなたが学びたい内容：', text # テキスト表示
-
-condition = st.sidebar.slider('あなたの今の調子は？', 0, 100, 50) # スライダー
-'コンディション：', condition # テキスト表示
+# condition = st.sidebar.slider('あなたの今の調子は？', 0, 100, 50) # スライダー
+# 'コンディション：', condition # テキスト表示
