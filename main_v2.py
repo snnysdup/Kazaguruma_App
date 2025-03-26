@@ -45,9 +45,9 @@ content_kind_of =[
 ]
 
 # chatGPTにリクエストするためのメソッドを設定。引数には書いてほしい内容と文章のテイストと最大文字数を指定（書いてほしい内容、文章の種類、最大文字数を指定）
-def run_gpt(content_text_to_gpt,content_current_to_gpt,content_goal_to_gpt,content_kind_of_to_gpt,content_maxStr_to_gpt):
+def run_gpt(content_text_to_gpt,content_current_to_gpt,content_goal_to_gpt,content_others_to_gpt,content_kind_of_to_gpt,content_maxStr_to_gpt):
     # リクエスト内容を決める
-    request_to_gpt = content_text_to_gpt +"について学びたい。"+content_text_to_gpt +"に対する現在の理解度は"+content_current_to_gpt +"レベルです。"+content_text_to_gpt +"に対して"+content_goal_to_gpt+ "程度理解を深めたいと考えています。"+"今後の学習において、おすすめの本をランキング形式で3つ出力してください。おすすめの際に、理由を添えてください。また、おすすめにあたり参照した出典元のリンクを記載してください。内容は"+ content_maxStr_to_gpt + "文字以内で出力してください。" + "また、文章は" + content_kind_of_to_gpt + "にしてください。"
+    request_to_gpt = content_text_to_gpt +"について学びたい。"+content_text_to_gpt +"に対する現在の理解度は"+content_current_to_gpt +"レベルです。"+content_text_to_gpt +"に対して"+content_goal_to_gpt+ "程度理解を深めたいと考えています。"+"今後の学習において、おすすめの本をランキング形式で3つ出力してください。おすすめの際に、理由を添えてください。また、おすすめにあたり参照した出典元のリンクを記載してください。その他、本の選定にあたっては、"+content_others_to_gpt + "を考慮してください。内容は"+ content_maxStr_to_gpt + "文字以内で出力してください。" + "また、文章は" + content_kind_of_to_gpt + "にしてください。"
     
     # 決めた内容を元にclient.chat.completions.createでchatGPTにリクエスト。オプションとしてmodelにAIモデル、messagesに内容を指定
     response = client.chat.completions.create(
@@ -73,7 +73,10 @@ content_text_to_gpt = st.sidebar.text_input("🔍 学びたい内容を入力し
 content_current_to_gpt = st.sidebar.text_input("上記入力した学びに対してのあなたの理解度を教えてください（例：初学者、業務で使用している）")
 
 # 学びに対して、どの程度理解を深めたいか
-content_goal_to_gpt = st.sidebar.text_input("上記入力した学びに対してのあなたがどの程度理解を深めたいか教えてください（例：業務で使えるレベルになりたい）")
+content_goal_to_gpt = st.sidebar.text_input("上記入力した学びに対してのあなたがどの程度理解を深めたいか教えてください（例：業務で使えるレベル）")
+
+# 書かせたい内容のテイストを選択肢として表示する
+content_others_to_gpt = st.sidebar.text_input("その他本の選定にあたり考慮して欲しい事項を記載してください（例：英語の本は除く、なるべく分かりやすい本、短い時間で読める本）")
 
 # 書かせたい内容のテイストを選択肢として表示する
 content_kind_of_to_gpt = st.sidebar.selectbox("文章の種類",options=content_kind_of)
@@ -81,7 +84,7 @@ content_kind_of_to_gpt = st.sidebar.selectbox("文章の種類",options=content_
 # chatGPTに出力させる文字数
 content_maxStr_to_gpt = str(st.sidebar.slider('記事の最大文字数', 100,3000,1000))
 
-output_content_text = run_gpt(content_text_to_gpt,content_current_to_gpt,content_goal_to_gpt,content_kind_of_to_gpt,content_maxStr_to_gpt)
+output_content_text = run_gpt(content_text_to_gpt,content_current_to_gpt,content_goal_to_gpt,content_others_to_gpt,content_kind_of_to_gpt,content_maxStr_to_gpt)
 st.write(output_content_text)
 
 
