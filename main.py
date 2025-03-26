@@ -1,13 +1,11 @@
 import streamlit as st
+import requests
+import datetime
 import numpy as np
 import pandas as pd
-import datetime
-# import plotly.graph_objects as go
 
 # タイトル
 st.title('KAZAGURUMA（画像入れたい）')
-import streamlit as st
-import datetime
 
 # `plotly` のインポートを試みる
 try:
@@ -17,8 +15,88 @@ except ImportError:
     plotly_available = False
     st.warning("⚠️ `plotly` がインストールされていません。以下のコマンドでインストールしてください。\n\n```sh\npip install plotly\n```")
 
-# タイトル
-st.title("学習レベル記録アプリ（仮）")
+
+# Google Books API検索関数
+def search_books(query, category, api_key):
+    base_url = "https://www.googleapis.com/books/v1/volumes"
+    params = {
+        "q": f"{category}:{query}",
+        "maxResults": 16,
+        "printType": "books",
+        "key": api_key
+    }
+    response = requests.get(base_url, params=params)
+    if response.status_code == 200:
+        return response.json().get("items", [])
+    return []
+
+# メイン関数
+def main():
+    st.title("Google Books 検索アプリ")
+    default_api_key = "AIzaSyBTzKTHSnpUBXiIKxQ5NCH7cKDGEqoBlzY"
+    api_key = st.text_input("Google Books APIキーを入力してください", value=default_api_key, type="password")
+        
+    search_options = ["DX", "生成AI", "デジタルマーケティング", "Python", "プログラミング", "WEBアプリ開発"]
+    search_type = st.radio("検索方法を選択", ["選択肢から検索", "自由入力"])
+    
+    query = ""
+    if search_type == "選択肢から検索":
+        selected_options = st.multiselect("検索ワードを選択（複数可）", search_options)
+        query = " ".join(selected_options)
+    else:
+        query = st.text_input("検索ワードを入力してください")
+
+    category_dict = {"タイトル": "intitle", "著者": "inauthor", "ジャンル": "subject"}
+    category = st.selectbox("検索カテゴリを選択", list(category_dict.keys()))
+
+    if "saved_books" not in st.session_state:
+        st.session_state.saved_books = []
+
+    if st.button("検索") and api_key and query:
+        books = search_books(query, category_dict[category], api_key)
+        if books:
+            cols = st.columns(4)
+            for i, book in enumerate(books):
+                with cols[i % 4]:
+                    volume_info = book.get("volumeInfo", {})
+                    title = volume_info.get("title", "タイトル不明")
+                    authors = ", ".join(volume_info.get("authors", ["著者不明"]))
+                    thumbnail = volume_info.get("imageLinks", {}).get("thumbnail", "")
+                    book_url = volume_info.get("infoLink", "#")
+
+                    st.markdown(f"#### [{title}]({book_url})", unsafe_allow_html=True)
+                    st.write(f"著者: {authors}")
+                    if thumbnail:
+                        st.image(thumbnail, width=150)
+
+                    # ボタンのキーをユニークにする
+                    if st.button(f"⭐ 気になる", key=f"save_{title}_{i}"):
+                        new_book = {
+                            "追加した日": datetime.datetime.now().strftime("books_addedtime"),
+                            "タイトル": title,
+                            "著者": authors,
+                            "URL": book_url,
+                            "サムネイル": thumbnail
+                        }
+                        if new_book not in st.session_state.saved_books:
+                            st.session_state.saved_books.append(new_book)
+                    st.markdown("---")
+        else:
+            st.write("該当する本が見つかりませんでした。")
+
+    # 読みたい本の一覧を表形式で表示
+    st.subheader("📚 読みたいに追加した本（表形式）")
+    if st.session_state.saved_books:
+        row = {"追加した日時":record["books_addedtime"]}
+        row.update(record["new_book"])
+        records_list.append(row)
+        df = pd.DataFrame(st.session_state.saved_books)
+        st.table(df)
+    else:
+        st.info("まだ記録がありません。")
+
+if __name__ == "__main__":
+    main()
 
 # 6 つの分野
 categories = ["Python", "生成AI", "BIツール", "自動化ツール", "デジタルマーケティング", "データ分析"]
@@ -66,35 +144,61 @@ def draw_radar_chart(levels):
     
     st.plotly_chart(fig)
 
-# 過去の記録を表示
+# # 過去の記録を表示
+# st.subheader("📜 学習履歴とレーダーチャート")
+
+# if st.session_state.history:
+#     # 最新のデータでレーダーチャートを描画
+#     latest_record = st.session_state.history[-1]
+#     draw_radar_chart(latest_record["levels"])
+
+#     st.write("### 🕒 過去の記録→もっといい感じに見せたい")
+#     for record in reversed(st.session_state.history):
+#         st.write(f"📅 {record['time']}")
+#         st.write(", ".join([f"{k}: {v}" for k, v in record["levels"].items()]))
+# else:
+#     st.info("まだ記録がありません。")
+
 st.subheader("📜 学習履歴とレーダーチャート")
 
 if st.session_state.history:
     # 最新のデータでレーダーチャートを描画
     latest_record = st.session_state.history[-1]
     draw_radar_chart(latest_record["levels"])
-
-    st.write("### 🕒 過去の記録→もっといい感じに見せたい")
-    for record in reversed(st.session_state.history):
-        st.write(f"📅 {record['time']}")
-        st.write(", ".join([f"{k}: {v}" for k, v in record["levels"].items()]))
+    
+    # 過去の記録をDataFrameに変換
+    records_list = []
+    for record in st.session_state.history:
+        row = {"日時": record["time"]}
+        row.update(record["levels"])
+        records_list.append(row)
+    
+    df = pd.DataFrame(records_list)
+    
+    st.write("### 🕒 過去の記録（表形式）")
+    # st.write(df)  
+    # st.dataframe(width=100, height=100) 
+    st.table(df) # データフレームの表示（スタイルなし）
 else:
     st.info("まだ記録がありません。")
 
 
 
+# df = pd.DataFrame({
+#     'Python': [1, 2, 3, 4],
+#     '生成AI': [10, 20, 30, 40],
+#     'BIツール': [10, 20, 30, 40],
+#     '自動化ツール': [10, 20, 30, 40],
+#     'デジタルマーケティング': [10, 20, 30, 40],
+#     'データ分析': [10, 20, 30, 40]
+# }) # データフレームの作成
 
-df = pd.DataFrame({
-    '1列目': [1, 2, 3, 4],
-    '2列目': [10, 20, 30, 40]
-}) # データフレームの作成
+# st.write(df)  # データフレームの表示
+# st.dataframe(df.style.highlight_max(axis=0), width=100, height=100) # データフレームの表示（スタイル付き）
 
-st.write(df)  # データフレームの表示
-st.dataframe(df.style.highlight_max(axis=0), width=100, height=100) # データフレームの表示（スタイル付き）
+# #公式ドキュメントを見に行くと、いろんな表示形式があるので確認する（display data）
 
-#公式ドキュメントを見に行くと、いろんな表示形式があるので確認する（display data）
-
-st.table(df.style.highlight_max(axis=0)) # データフレームの表示（スタイル付き）
+# st.table(df.style.highlight_max(axis=0)) # データフレームの表示（スタイル付き）
 
 # """
 # # 章
